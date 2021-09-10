@@ -1,0 +1,112 @@
+#+TITLE:More concise results from Mldoc
+#+DATE:2021-09-11
+
+目前Mldoc无法处理比较复杂的orgmode场景，比如下面的几个例子，某些隶属于相应子元素的属性全被解析到了page级别，渲染效果不是很理想。按照我的想法，如果可以实现下面的解析结果，不但可以实现各个元素更细致的显示和控制，而且更长远的场景，比如表格计算，对齐等都成为了可能。
+
+其实我不是很清楚实现的难度，还有对性能会产生什么的影响。你们帮忙看看，如果可以实现的话，后面的元素显示还有扩展功能的话交给我来做。
+
+除了下面的几个解析，还希望能暴露重要元素的 =:start_pos, :end_pos= 给logseq，比如link, 这样就可以在编辑状态下更容易实现快捷键打开链接等，而不需要先退出编辑状态等待渲染后再打开。等等。
+
+
+* 1. 表格
+#+caption: Table caption
+#+name: table_name
+| Name  | number | cost per item |      sum | incl VAT |
+|-------+--------+---------------+----------+----------|
+| name1 |      3 |       1500.00 |  4500.00 |  4860.00 |
+| name2 |      9 |       4000.00 | 36000.00 | 38880.00 |
+| name3 |      4 |       2800.00 | 11200.00 | 12096.00 |
+|-------+--------+---------------+----------+----------|
+| Total |        |               | 51700.00 | 55836.00 |
+#+TBLFM: @>$4..@>$>=vsum(@I..@II);%.2f::@2$4..@4$4=$2*$3;%.2f::@2$5..@4$5=$4*1.08;%.2f
+
+** 目前的结果
+表格的 caption 和 name 被解析到了page的属性中。
+#+begin_src clojure
+{:block/body [[Table {:header [[[Plain Name]] [[Plain number]] [[Plain cost per item]] [[Plain sum]] [[Plain incl VAT]]],
+                      :groups [[[[[Plain name1]] [[Plain 3]] [[Plain 1500.00]] [[Plain 4500.00]] [[Plain 4860.00]]]
+                                [[[Plain name2]] [[Plain 9]] [[Plain 4000.00]] [[Plain 36000.00]] [[Plain 38880.00]]]
+                                [[[Plain name3]] [[Plain 4]] [[Plain 2800.00]] [[Plain 11200.00]] [[Plain 12096.00]]]]
+                               [[[[Plain Total]] [[Plain ]] [[Plain ]] [[Plain 51700.00]] [[Plain 55836.00]]]]],
+                      :col_groups [5]}] [Paragraph [[Break_Line] [Break_Line]]]]}
+#+end_src
+
+** 期望实现的结果
+#+begin_src clojure
+{:block/body [[Table {:name table_name ;; not possible yet
+                      :caption Table caption ;; not possible yet
+                      :formula [;; formula separator: ::
+                                @>$4..@>$>=vsum(@I..@II) ;%.2f
+                                @2$4..@4$4=$2*$3         ;%.2f
+                                @2$5..@4$5=$4*1.08       ;%.2f
+                                ]
+                      :header [[[Plain Name]] [[Plain number]] [[Plain cost per item]] [[Plain sum]] [[Plain incl VAT]]],
+                      :groups [[[[[Plain name1]] [[Plain 3]] [[Plain 1500.00]] [[Plain 4500.00]] [[Plain 4860.00]]]
+                                [[[Plain name2]] [[Plain 9]] [[Plain 4000.00]] [[Plain 36000.00]] [[Plain 38880.00]]]
+                                [[[Plain name3]] [[Plain 4]] [[Plain 2800.00]] [[Plain 11200.00]] [[Plain 12096.00]]]]
+                               [[[[Plain Total]] [[Plain ]] [[Plain ]] [[Plain 51700.00]] [[Plain 55836.00]]]]],
+                      :col_groups [5]
+                      :pos_meta {:start_pos 1917, :end_pos 1929} ;; not possible yet
+                      }
+#+end_src
+* 2. 图
+- 场景1:
+#+name: image_name
+#+caption: Image caption
+#+attr_org: :width 200px
+[[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
+
+- 场景2:
+#+name: image_name
+#+caption: Image caption :width 200px
+[[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
+  
+
+** 目前的结果
+#+begin_src clojure
+{:block/properties {:name image_name, :caption Image caption, :attr-org :width 200px},
+ :block/properties-order (:name :caption :attr-org), :block/children (),
+ :block/content Image
+
+ ,#+name: image_name
+ ,#+caption: Image caption
+ ,#+attr_org: :width 200px
+ [[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
+ {:height 404, :width 704}}
+#+end_src
+
+** 期望实现的结果
+#+begin_src clojure
+{:block/body [[Image {:name image_name
+                      :caption Image caption
+                      :options {:width 200px},
+                      :url [[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
+                      :pos_meta {:start_pos 1917, :end_pos 1929}}
+#+end_src
+
+* 3. 代码块
+#+NAME: source_block
+#+header: :var x=2 y=3 
+#+BEGIN_SRC emacs-lisp :var z=4 :results line
+(* 2 x y z)
+#+END_SRC
+
+#+RESULTS: mydouble
+: 48
+
+** 目前的结果
+#+begin_src clojure
+{:block/body [[Src {:lines [(* 2 x y z)],
+                    :language emacs-lisp,
+                    :options [:var z=4 :results line],
+                    :pos_meta {:start_pos 3533, :end_pos 3545}}
+#+end_src
+
+** 期望实现的结果
+#+begin_src clojure
+{:block/body [[Src {:name source_block ;; not possible yet
+                    :lines [(* 2 x y z)],
+                    :language emacs-lisp,
+                    :options [:var {:x 2 :y 3 :z 4} :results line], ;; partially possible by now
+                    :pos_meta {:start_pos 1917, :end_pos 1929}}
+#+end_src
