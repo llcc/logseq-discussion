@@ -7,8 +7,11 @@
 
 除了下面的几个解析，还希望能暴露重要元素的 =:start_pos, :end_pos= 给logseq，比如link, 这样就可以在编辑状态下更容易实现快捷键打开链接等，而不需要先退出编辑状态等待渲染后再打开。等等。
 
+* TODO 1. 表格
+:PROPERTIES:
+:created_at: <2021-09-11 Sat 19:30>
+:END:
 
-* 1. 表格
 #+caption: Table caption
 #+name: table_name
 | Name  | number | cost per item |      sum | incl VAT |
@@ -20,7 +23,8 @@
 | Total |        |               | 51700.00 | 55836.00 |
 #+TBLFM: @>$4..@>$>=vsum(@I..@II);%.2f::@2$4..@4$4=$2*$3;%.2f::@2$5..@4$5=$4*1.08;%.2f
 
-** 目前的结果
+** 1.1 目前的结果
+
 表格的 caption 和 name 被解析到了page的属性中。
 #+begin_src clojure
 {:block/body [[Table {:header [[[Plain Name]] [[Plain number]] [[Plain cost per item]] [[Plain sum]] [[Plain incl VAT]]],
@@ -31,7 +35,8 @@
                       :col_groups [5]}] [Paragraph [[Break_Line] [Break_Line]]]]}
 #+end_src
 
-** 期望实现的结果
+** 1.2 期望实现的结果
+
 #+begin_src clojure
 {:block/body [[Table {:name table_name ;; not possible yet
                       :caption Table caption ;; not possible yet
@@ -49,7 +54,10 @@
                       :pos_meta {:start_pos 1917, :end_pos 1929} ;; not possible yet
                       }
 #+end_src
-* 2. 图
+* TODO 2. 图
+:PROPERTIES:
+:created_at: <2021-09-11 Sat 18:08>
+:END:
 - 场景1:
 #+name: image_name
 #+caption: Image caption
@@ -62,7 +70,7 @@
 [[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
   
 
-** 目前的结果
+** 2.1 目前解析结果
 #+begin_src clojure
 {:block/properties {:name image_name, :caption Image caption, :attr-org :width 200px},
  :block/properties-order (:name :caption :attr-org), :block/children (),
@@ -75,7 +83,7 @@
  {:height 404, :width 704}}
 #+end_src
 
-** 期望实现的结果
+** 2.2 期望解析结果
 #+begin_src clojure
 {:block/body [[Image {:name image_name
                       :caption Image caption
@@ -84,7 +92,10 @@
                       :pos_meta {:start_pos 1917, :end_pos 1929}}
 #+end_src
 
-* 3. 代码块
+* TODO 3. 代码块
+:PROPERTIES:
+:created_at: <2021-09-11 Sat 23:00>
+:END:
 #+NAME: source_block
 #+header: :var x=2 y=3 
 #+BEGIN_SRC emacs-lisp :var z=4 :results line
@@ -109,4 +120,233 @@
                     :language emacs-lisp,
                     :options [:var {:x 2 :y 3 :z 4} :results line], ;; partially possible by now
                     :pos_meta {:start_pos 1917, :end_pos 1929}}
+#+end_src
+
+* TODO 4. List
+:PROPERTIES:
+:created_at: <2021-09-12 Sun 00:06>
+:END:
+通过 =start_pos, end_pos= 可以给每条list item建立独立的id，这样 list 的check 功能也就可以容易实现了。
+** Unordered list
+- [X] item a
+- [ ] item b
+- [ ] item c
+
+*** 目前解析结果
+#+begin_src clojure
+[List [{:content [[Paragraph [[Plain item a]]]], 
+        :items [],
+        :name [], 
+        :checkbox true, 
+        :indent 0, 
+        :ordered false}
+       {:content [[Paragraph [[Plain item b]]]],
+        :items [],
+        :name [], 
+        :checkbox false, 
+        :indent 0, 
+        :ordered false}
+       {:content [[Paragraph [[Plain item c]]]],
+        :items [],
+        :name [], 
+        :checkbox false, 
+        :indent 0, 
+        :ordered false}]]
+#+end_src
+
+*** 期望解析结果
+#+begin_src clojure
+[List [{:content [[Paragraph [[Plain item a]]]], 
+        :items [],
+        :name [], 
+        :checkbox true, 
+        :indent 0, 
+        :ordered false,
+        :pos_meta {:start_pos 1917, :end_pos 1929}  ;; not possible yet
+        }
+       {:content [[Paragraph [[Plain item b]]]],  
+        :items [],
+        :name [], 
+        :checkbox false, 
+        :indent 0, 
+        :ordered false,
+        :pos_meta {:start_pos 1917, :end_pos 1929}  ;; not possible yet
+        }
+       {:content [[Paragraph [[Plain item c]]]],
+        :items [],
+        :name [], 
+        :checkbox false, 
+        :indent 0, 
+        :ordered false
+        :pos_meta {:start_pos 1917, :end_pos 1929} ;; not possible yet
+        }]]
+#+end_src
+** Ordered list
+1. [X] first
+2. [ ] second
+3. [ ] third
+*** 目前解析结果
+#+begin_src clojure
+[List [{:content [[Paragraph [[Plain item a]]]], 
+        :items [],
+        :name [],
+        :number 1,
+        :checkbox true, 
+        :indent 0, 
+        :ordered true,
+        }
+       {:content [[Paragraph [[Plain item b]]]],  
+        :items [],
+        :name [],
+        :number 2,
+        :checkbox false, 
+        :indent 0, 
+        :ordered true,
+        }
+       {:content [[Paragraph [[Plain item c]]]],
+        :items [],
+        :name [],
+        :number 3,
+        :checkbox false, 
+        :indent 0, 
+        :ordered true
+        }]]
+#+end_src
+*** 期望解析结果
+#+begin_src clojure
+[List [{:content [[Paragraph [[Plain item a]]]], 
+        :items [],
+        :name [],
+        :number 1,
+        :checkbox true, 
+        :indent 0, 
+        :ordered true,
+        :pos_meta {:start_pos 1917, :end_pos 1929}  ;; not possible yet
+        }
+       {:content [[Paragraph [[Plain item b]]]],  
+        :items [],
+        :name [],
+        :number 2,
+        :checkbox false, 
+        :indent 0, 
+        :ordered true,
+        :pos_meta {:start_pos 1917, :end_pos 1929}  ;; not possible yet
+        }
+       {:content [[Paragraph [[Plain item c]]]],
+        :items [],
+        :name [],
+        :number 3,
+        :checkbox false, 
+        :indent 0, 
+        :ordered true
+        :pos_meta {:start_pos 1917, :end_pos 1929} ;; not possible yet
+        }]]
+#+end_src
+** NEXT Nested list
+这个作为长远计划也行。
+- [ ] item a
+  - [ ] subitem a1
+    - [ ] subitem a1-1
+    - [ ] subitem a1-2
+  - [ ] subitem a2
+- [ ] item b
+
+*** 期望解析结果
+
+#+begin_src clojure
+[List [{:content [[Paragraph [[Plain item a]]]], 
+        :items [], ;; 不知道现在items主要存什么
+        :name [], 
+        :checkbox false, 
+        :indent 0,
+        :children [
+                   {:content [[Paragraph [[subitem a1]]]], 
+                    :items [], 
+                    :name [], 
+                    :checkbox false, 
+                    :indent 2,
+                    :children [{:content [[Paragraph [[subitem a1-1]]]], 
+                                :items [], 
+                                :name [], 
+                                :checkbox false, 
+                                :indent 4,
+                                :children nil,
+                                :parent {:content [[Paragraph [[Plain subitem a1]]]], 
+                                         :items [], 
+                                         :name [], 
+                                         :checkbox false, 
+                                         :indent 0,
+                                         :ordered false,
+                                         :pos_meta {:start_pos 1917, :end_pos 1929},
+                                         }
+                                :ordered false,
+                                :pos_meta {:start_pos 1917, :end_pos 1929},
+                                },
+                               
+                               {:content [[Paragraph [[subitem a1-2]]]], 
+                                :items [], 
+                                :name [], 
+                                :checkbox false, 
+                                :indent 4,
+                                :children nil,
+                                :parent {:content [[Paragraph [[Plain item a1]]]], 
+                                         :items [], 
+                                         :name [], 
+                                         :checkbox false, 
+                                         :indent 0,
+                                         :ordered false,
+                                         :pos_meta {:start_pos 1917, :end_pos 1929},
+                                         }
+                                :ordered false,
+                                :pos_meta {:start_pos 1917, :end_pos 1929},
+                                }]
+                    
+                    :parent {
+                             :content [[Paragraph [[Plain item a]]]], 
+                             :items [], 
+                             :name [], 
+                             :checkbox false, 
+                             :indent 0,
+                             :parent nil
+                             :ordered false,
+                             :pos_meta {:start_pos 1917, :end_pos 1929},
+                             }
+                    :ordered false,
+                    :pos_meta {:start_pos 1917, :end_pos 1929},
+                    }
+                   
+                   {:content [[Paragraph [[Plain subitem a2]]]], 
+                    :items [], 
+                    :name [], 
+                    :checkbox false, 
+                    :indent 2,
+                    :children nil,
+                    :parent {:content [[Paragraph [[Plain item a]]]], 
+                             :items [], 
+                             :name [], 
+                             :checkbox false, 
+                             :indent 0,
+                             :parent nil
+                             :ordered false,
+                             :pos_meta {:start_pos 1917, :end_pos 1929},
+                             }
+                    :ordered false,
+                    :pos_meta {:start_pos 1917, :end_pos 1929},
+                    }
+                   ]
+        :parent nil,
+        :ordered false,
+        :pos_meta {:start_pos 1917, :end_pos 1929},
+        }
+       
+       {:content [[Paragraph [[Plain item b]]]],
+        :items [],
+        :name [], 
+        :checkbox false, 
+        :indent 0,
+        :parent nil,
+        :children nil,
+        :ordered false,
+        :pos_meta {:start_pos 1917, :end_pos 1929},
+        }]]
 #+end_src
