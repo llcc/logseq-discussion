@@ -393,19 +393,18 @@
 
 ** TODO 5.2 Headline with tags 的空格问题
 
-orgmode 里面的 tags 都是右对齐的，title 和 tags 之间以 space 填充。
+orgmode 里面的 tags 都是右对齐的，title 和 tags 之间以 spaces 填充。
 #+begin_src org
 ,* Headline with tags
 ,** Demo1                                                                                               :org:
 ,** Demo1 [[a page ref]]                                                                                :org:
 #+end_src
 
-在 logseq 中当空格太多时，tags 会被挤压到下一行。当 headline 的文本和 tags 之间有其他元素的时候，显示正常。
+在 logseq 中当空格太多时，tags 会被挤压到下一行。headline 的文本和 tags 之间有其他元素的时候，显示正常。
 [[file:images/image-P0IeLB20210919-051458.png]]
   
 - Block data
-  - Demo1
-    =:block/title= 里的 =Plain= 块里面的 Demo1 后面的空格应该被 =trimr= 掉只剩一个空格。 
+  - Demo1 :: =:block/title= 里的 =Plain= 块里面的 Demo1 后面的空格应该被 =trimr= 掉只剩一个空格。 
     #+begin_src clojure
     {{:db/id 4792},
      :block/refs [{:db/id 309}],
@@ -426,8 +425,7 @@ orgmode 里面的 tags 都是右对齐的，title 和 tags 之间以 space 填�
      :block/page {:db/id 4784}, 
      :block/file {:db/id 4786}}
     #+end_src
-  - Demo2
-    当 headline 的文本和 tags 之间有其他元素的时候，空格会被 =trimr= 掉。
+  - Demo2 :: 当 headline 的文本和 tags 之间有其他元素的时候，空格会被 =trimr= 掉。
     #+begin_src clojure
     {:block/uuid #uuid "61464379-e132-4b59-8076-d489768f2a59",
      :block/properties {},
@@ -466,10 +464,9 @@ This is a paragraph line.
 #+end_src
 
 当一个 block 同时存在 =SCHEDULED= 和 =DEADLINE= 时，因为在 logseq 中 =DEADLINE= 都是单独行显示，所以其后面的换行符在 logseq 中会被以空行显示出来。
-[[file:/mnt/Users/lzhes/Github/logseq-discussion/images/image-5Ydzfv20210919-052742.png]]
+[[images/image-5Ydzfv20210919-052742.png]]
 
-- Block data
-  =:block/body= 里面的 =["Break_Line"]= 问题，如果判定前面相邻元素是 ~["Timestamp"]~ 时，在 parser 层面可不可以容易被丢掉。在 logseq 中写个函数可以实现，但是有点不太美观。
+- Block data :: =:block/body= 里面的 =["Break_Line"]= 问题，如果判定前面相邻元素是 ~["Timestamp"]~ 时，在 parser 层面可不可以容易被丢掉。在 logseq 中写个函数可以实现，但是有点不太美观。
   
   #+begin_src clojure
   {:block/uuid #uuid "61459397-4781-4f6f-96d8-186dd9853bc4",
