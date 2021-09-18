@@ -355,7 +355,7 @@
 ** TODO 5.1 Properties drawer 里面的链接解析问题
 
 #+begin_src org
-`* Links in properties drawer 
+,* Links in properties drawer 
 :PROPERTIES:
 :URL1: www.google.com
 :URL2: [[www.google.com]]
@@ -464,6 +464,7 @@ This is a paragraph line.
 #+end_src
 
 当一个 block 同时存在 =SCHEDULED= 和 =DEADLINE= 时，因为在 logseq 中 =DEADLINE= 都是单独行显示，所以其后面的换行符在 logseq 中会被以空行显示出来。
+
 [[images/image-5Ydzfv20210919-052742.png]]
 
 - Block data :: =:block/body= 里面的 =["Break_Line"]= 问题，如果判定前面相邻元素是 ~["Timestamp"]~ 时，在 parser 层面可不可以容易被丢掉。在 logseq 中写个函数可以实现，但是有点不太美观。
