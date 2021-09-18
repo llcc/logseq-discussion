@@ -12,6 +12,7 @@
 :created_at: <2021-09-11 Sat 19:30>
 :END:
 
+#+begin_src org
 #+caption: Table caption
 #+name: table_name
 | Name  | number | cost per item |      sum | incl VAT |
@@ -22,6 +23,7 @@
 |-------+--------+---------------+----------+----------|
 | Total |        |               | 51700.00 | 55836.00 |
 #+TBLFM: @>$4..@>$>=vsum(@I..@II);%.2f::@2$4..@4$4=$2*$3;%.2f::@2$5..@4$5=$4*1.08;%.2f
+#+end_src
 
 ** 1.1 目前的结果
 
@@ -59,16 +61,19 @@
 :created_at: <2021-09-11 Sat 18:08>
 :END:
 - 场景1:
-#+name: image_name
-#+caption: Image caption
-#+attr_org: :width 200px
-[[https://logseq.github.io/screenshots/1.png]]
+  #+begin_src org
+  ,#+name: image_name
+  ,#+caption: Image caption
+  ,#+attr_org: :width 200px
+  [[https://logseq.github.io/screenshots/1.png]]
+  #+end_src
 
 - 场景2:
-#+name: image_name
-#+caption: Image caption :width 200px
-[[https://logseq.github.io/screenshots/1.png]]
-  
+  #+begin_src org
+  ,#+name: image_name
+  ,#+caption: Image caption :width 200px
+  [[https://logseq.github.io/screenshots/1.png]]
+  #+end_src  
 
 ** 2.1 目前解析结果
 #+begin_src clojure
@@ -96,14 +101,17 @@
 :PROPERTIES:
 :created_at: <2021-09-11 Sat 23:00>
 :END:
-#+NAME: source_block
-#+header: :var x=2 y=3 
-#+BEGIN_SRC emacs-lisp :var z=4 :results line
-(* 2 x y z)
-#+END_SRC
 
-#+RESULTS: mydouble
+#+begin_src org
+,#+NAME: source_block
+,#+header: :var x=2 y=3 
+,#+BEGIN_SRC emacs-lisp :var z=4 :results line
+(* 2 x y z)
+,#+END_SRC
+
+,#+RESULTS: mydouble
 : 48
+#+end_src
 
 ** 3.1 目前的结果
 #+begin_src clojure
@@ -128,9 +136,12 @@
 :END:
 通过 =start_pos, end_pos= 可以给每条list item建立独立的id，这样 list 的check 功能也就可以容易实现了。
 ** 4.1 Unordered list
+
+#+begin_src org
 - [X] item a
 - [ ] item b
 - [ ] item c
+#+end_src
 
 *** 4.1.1 目前解析结果
 #+begin_src clojure
@@ -182,9 +193,13 @@
         }]]
 #+end_src
 ** 4.2 Ordered list
+
+#+begin_src org
 1. [X] first
 2. [ ] second
 3. [ ] third
+#+end_src
+
 *** 4.2.1 目前解析结果
 #+begin_src clojure
 [List [{:content [[Paragraph [[Plain item a]]]], 
@@ -244,12 +259,15 @@
 #+end_src
 ** NEXT 4.3 Nested list
 这个作为长远计划也行。
+
+#+begin_src org
 - [ ] item a
   - [ ] subitem a1
     - [ ] subitem a1-1
     - [ ] subitem a1-2
   - [ ] subitem a2
 - [ ] item b
+#+end_src
 
 *** 4.3.1 期望解析结果
 
