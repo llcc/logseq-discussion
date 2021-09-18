@@ -62,12 +62,12 @@
 #+name: image_name
 #+caption: Image caption
 #+attr_org: :width 200px
-[[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
+[[https://logseq.github.io/screenshots/1.png]]
 
 - 场景2:
 #+name: image_name
 #+caption: Image caption :width 200px
-[[https://logseq.github.io/screenshots/1.png][Logseq screenshot from homepage]]
+[[https://logseq.github.io/screenshots/1.png]]
   
 
 ** 2.1 目前解析结果
@@ -350,3 +350,157 @@
         :pos_meta {:start_pos 1917, :end_pos 1929},
         }]]
 #+end_src
+
+* [#A] 5. Bugs
+** TODO 5.1 Properties drawer 里面的链接解析问题
+
+#+begin_src org
+`* Links in properties drawer 
+:PROPERTIES:
+:URL1: www.google.com
+:URL2: [[www.google.com]]
+:URL3: [[www.google.com][google]]
+:END:
+#+end_src
+
+上面的链接在logseq 的显示如下图片所示，带有 [[]] 的 Properties 链接被解析成单独的 set, UI 上 =url2= 显示正常， =url3= 有误。
+[[file:images/image-9vTKPj20210919-044855.png]]
+  
+- Block data:
+  #+begin_src clojure
+  {:block/uuid #uuid "61463e37-7500-427d-aaf0-d2e15958d53d",
+   :block/properties
+   {:url1 "www.google.com",
+    :url2 #{"www.google.com"},
+    :url3 #{"www.google.com][google"}},
+   :block/left {:db/id 4787},
+   :block/refs [{:db/id 790} {:db/id 4791}],
+   :block/anchor "Links_in_properties_drawer",
+   :block/properties-order (:url1 :url2 :url3),
+   :block/body [],
+   :block/format :org,
+   :block/level 1,
+   :block/title [["Plain" "Links in properties drawer "]],
+   :block/content
+   "Links in properties drawer \n:PROPERTIES:\n:URL1: www.google.com\n:URL2: [[www.google.com]]\n:URL3: [[www.google.com][google]]\n:END:",
+   :db/id 4790,
+   :block/path-refs [{:db/id 790} {:db/id 4784} {:db/id 4791}],
+   :block/parent {:db/id 4784},
+   :block/unordered true,
+   :block/page {:db/id 4784}, 
+   :block/file {:db/id 4786}}
+   #+end_src
+
+** TODO 5.2 Headline with tags 的空格问题
+
+orgmode 里面的 tags 都是右对齐的，title 和 tags 之间以 space 填充。
+#+begin_src org
+,* Headline with tags
+,** Demo1                                                                                               :org:
+,** Demo1 [[a page ref]]                                                                                :org:
+#+end_src
+
+在 logseq 中当空格太多时，tags 会被挤压到下一行。当 headline 的文本和 tags 之间有其他元素的时候，显示正常。
+[[file:images/image-P0IeLB20210919-051458.png]]
+  
+- Block data
+  - Demo1
+    =:block/title= 里的 =Plain= 块里面的 Demo1 后面的空格应该被 =trimr= 掉只剩一个空格。 
+    #+begin_src clojure
+    {{:db/id 4792},
+     :block/refs [{:db/id 309}],
+     :block/anchor "Demo1",
+     :block/body [],
+     :block/format :org,
+     :block/level 1,
+     :block/tags [{:db/id 309}],
+     :block/title  ;; Issues here
+     [["Plain"
+       "Demo1                                                                                                                                           "]],
+     :block/content
+     "Demo1                                                                                                                                           :org:",
+     :db/id 4795,
+     :block/path-refs [{:db/id 309} {:db/id 4784}],
+     :block/parent {:db/id 4792},
+     :block/unordered true,
+     :block/page {:db/id 4784}, 
+     :block/file {:db/id 4786}}
+    #+end_src
+  - Demo2
+    当 headline 的文本和 tags 之间有其他元素的时候，空格会被 =trimr= 掉。
+    #+begin_src clojure
+    {:block/uuid #uuid "61464379-e132-4b59-8076-d489768f2a59",
+     :block/properties {},
+     :block/journal? false,
+     :block/left {:db/id 4795},
+     :block/refs [{:db/id 309} {:db/id 4799}],
+     :block/anchor "Demo2",
+     :block/body [],
+     :block/format :org,
+     :block/level 1,
+     :block/tags [{:db/id 309}],
+     :block/title ;; 
+     [["Plain" "Demo2 "]
+      ["Link"
+       {:url ["Page_ref" "a page ref"],
+        :label [["Plain" ""]],
+        :full_text "[[a page ref]]",
+        :metadata ""}]],
+     :block/content
+     "Demo2 [[a page ref]]                                                                                :org:",
+     :db/id 4796,
+     :block/path-refs [{:db/id 309} {:db/id 4784} {:db/id 4799}],
+     :block/parent {:db/id 4792},
+     :block/unordered true,
+     :block/page {:db/id 4784}, 
+     :block/file {:db/id 4786}}
+    #+end_src
+
+** TODO 5.3 Block with both SCHEDULED and DEADLINE 的空行问题
+
+#+begin_src org
+,* Block with both SCHEDULED and DEADLINE
+SCHEDULED: <2021-09-18 Sat>
+DEADLINE: <2021-09-18 Sat>
+This is a paragraph line.
+#+end_src
+
+当一个 block 同时存在 =SCHEDULED= 和 =DEADLINE= 时，因为在 logseq 中 =DEADLINE= 都是单独行显示，所以其后面的换行符在 logseq 中会被以空行显示出来。
+[[file:/mnt/Users/lzhes/Github/logseq-discussion/images/image-5Ydzfv20210919-052742.png]]
+
+- Block data
+  =:block/body= 里面的 =["Break_Line"]= 问题，如果判定前面相邻元素是 ~["Timestamp"]~ 时，在 parser 层面可不可以容易被丢掉。在 logseq 中写个函数可以实现，但是有点不太美观。
+  
+  #+begin_src clojure
+  {:block/uuid #uuid "61459397-4781-4f6f-96d8-186dd9853bc4",
+   :block/properties {},
+   :block/left {:db/id 4785},
+   :block/anchor "Block_with_both_SCHEDULED_and_DEADLINE",
+   :block/scheduled 20210918,
+   :block/deadline 20210918,
+   :block/body
+   [["Paragraph"
+     (["Timestamp"
+       ["Scheduled"
+        {:date {:year 2021, :month 9, :day 18},
+         :wday "Sat",
+         :active true}]]
+      ["Timestamp"
+       ["Deadline"
+        {:date {:year 2021, :month 9, :day 18},
+         :wday "Sat",
+         :active true}]]
+      ["Break_Line"]
+      ["Plain" "This is a paragraph line."])]],
+   :block/format :org,
+   :block/level 1,
+   :block/title [["Plain" "Block with both SCHEDULED and DEADLINE"]],
+   :block/content
+   "Block with both SCHEDULED and DEADLINE\nSCHEDULED: <2021-09-18 Sat>\nDEADLINE: <2021-09-18 Sat>\nThis is a paragraph line.",
+   :db/id 4787,
+   :block/path-refs [{:db/id 4784}],
+   :block/parent {:db/id 4784},
+   :block/unordered true,
+   :block/page {:db/id 4784}, 
+   :block/file {:db/id 4786}}
+  #+end_src
