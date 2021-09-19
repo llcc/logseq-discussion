@@ -486,7 +486,8 @@ This is a paragraph line.
 [[images/image-5Ydzfv20210919-052742.png]]
 
 - Block data :: =:block/body= 里面的 =["Break_Line"]= 问题，如果判定前面相邻元素是 ~["Timestamp"]~ 时，在 parser 层面可不可以容易被丢掉。在 logseq 中写个函数可以实现，但是有点不太美观。
-  Edit: 暂时通过commit: https://github.com/logseq/logseq/pull/2802/commits/87f49065445d5563be1a140824f6f38a903a6faa 解决。
+  
+  Edit@<2021-09-19 Sun>: 暂时通过 [[https://github.com/logseq/logseq/pull/2802/commits/87f49065445d5563be1a140824f6f38a903a6faa][PR]] 解决。
   
   #+begin_src clojure
   {:block/uuid #uuid "61459397-4781-4f6f-96d8-186dd9853bc4",
